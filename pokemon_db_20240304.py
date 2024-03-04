@@ -33,7 +33,7 @@ def build_pokemon_tbl(url: str, tbl_schema: Dict) -> pl.DataFrame:
     tbl = pl.DataFrame(
         schema=tbl_schema
     )
-
+    print("Getting data from pokemon API")
     response = requests.get(url)
     results = json.loads(response.text)['results']
     results_df = pl.DataFrame(results)
@@ -55,6 +55,7 @@ def get_sprite_url(url: str) -> str:
     return sprites_dict[first_key]
 
 def add_sprite_col(tbl: pl.DataFrame, ref_col: str) -> pl.DataFrame:
+    print("Adding sprite col to table with parallelized requests")
     tbl = tbl.with_columns(
         pl.col(ref_col).map_elements(
             get_sprite_url,
@@ -74,6 +75,7 @@ def get_pokemon_image(
         lookup_col = 'name'
     if tbl is None:
         tbl = pokemon_tbl
+    print("Getting Image to Display from Lookup")
     sprite_url = (
         pokemon_tbl
         .filter(pl.col(lookup_col)==lookup)
@@ -85,7 +87,7 @@ def get_pokemon_image(
         save_path = str(Path(__file__).parent) + '\pokemon_image.png'
         img.save(save_path)
     return img.show()
-
+    
 pokemon_tbl = build_pokemon_tbl(pokemon_url, t_schema)
 
 pokemon_tbl = add_sprite_col(pokemon_tbl, 'url')
@@ -93,5 +95,4 @@ print("First 10 Records of Table")
 print(pokemon_tbl.head(10))
 print("Last 10 Records of Table")
 print(pokemon_tbl.tail(10))
-print("Displaying Lookup Image")
 get_pokemon_image(lookup='charmander')
